@@ -11,7 +11,7 @@ https://static01.nyt.com/images/YYYY/MM/DD/nytfrontpage/scan.pdf
 The pipeline has three steps:
 
 ```
-download-frontpages  ->  pdf-to-markdown  ->  ask-frontpage
+download-frontpages  →  pdf-to-markdown  →  ask-frontpage
    (PDF files)            (markdown files)      (Q&A via Ollama)
 ```
 
@@ -43,9 +43,9 @@ ollama pull llama3
 
 Downloads front page PDFs for a date range into `frontpages/YYYY-MM-DD.pdf`.
 
-- Defaults to Jan 1, 2025 - Mar 6, 2026
-- Skips files already downloaded - safe to resume if interrupted
-- Randomized 2-4s delay between requests; handles 404s gracefully
+- Defaults to Jan 1, 2025 – Mar 6, 2026
+- Skips files already downloaded — safe to resume if interrupted
+- Randomized 2–4s delay between requests; handles 404s gracefully
 
 ```bash
 uv run download-frontpages
@@ -82,14 +82,14 @@ Type `quit` or press `Ctrl+C` to exit.
 
 ```
 nytimes-tooling/
-|-- pyproject.toml              # project metadata + dependencies (uv)
-|-- uv.lock                     # pinned, reproducible dependency versions
-|-- src/nytimes_tooling/
-|   |-- download.py             # Step 1: download PDFs
-|   |-- convert.py              # Step 2: PDF -> markdown
-|   `-- ask.py                  # Step 3: Q&A via Ollama
-|-- frontpages/                 # downloaded PDFs (git-ignored)
-`-- markdown/                   # converted markdown (git-ignored)
+├── pyproject.toml              # project metadata + dependencies (uv)
+├── uv.lock                     # pinned, reproducible dependency versions
+├── src/nytimes_tooling/
+│   ├── download.py             # Step 1: download PDFs
+│   ├── convert.py              # Step 2: PDF → markdown
+│   └── ask.py                  # Step 3: Q&A via Ollama
+├── frontpages/                 # downloaded PDFs (git-ignored)
+└── markdown/                   # converted markdown (git-ignored)
 ```
 
 ## Known limitations
