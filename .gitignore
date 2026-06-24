@@ -1,0 +1,27 @@
+# Project data (downloaded/generated — not source)
+frontpages/
+markdown/
+images/
+videos/
+*.pdf
+*.mp4
+*.csv
+*.srt
+
+# uv / virtualenv
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
