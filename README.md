@@ -1,4 +1,4 @@
-# NYT Front Page Parser
+# NYT Front Page Tooling
 
 Download, parse, and query New York Times front page PDFs using a local [Ollama](https://ollama.com) model.
 
@@ -81,10 +81,10 @@ Type `quit` or press `Ctrl+C` to exit.
 ## Layout
 
 ```
-nytimes_parser/
+nytimes-tooling/
 ├── pyproject.toml              # project metadata + dependencies (uv)
 ├── uv.lock                     # pinned, reproducible dependency versions
-├── src/nytimes_parser/
+├── src/nytimes_tooling/
 │   ├── download.py             # Step 1: download PDFs
 │   ├── convert.py              # Step 2: PDF → markdown
 │   └── ask.py                  # Step 3: Q&A via Ollama
