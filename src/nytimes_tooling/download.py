@@ -1,13 +1,14 @@
 """
-Download NYT front page PDFs for a date range.
+Download NYT front page PDFs.
 
 NYT publishes a public PDF of each day's front page; no subscription required.
 Files are saved to frontpages/YYYY-MM-DD.pdf and existing files are skipped,
 so the download is safe to resume if interrupted.
 
 Usage:
-    download-frontpages                              # default range
-    download-frontpages --start 2025-01-01 --end 2025-03-06
+    download-frontpages                          # today only
+    download-frontpages 2025-01-01               # one date only
+    download-frontpages 2025-01-01 2025-03-06    # a date range
     download-frontpages --out-dir frontpages
 """
 
@@ -19,9 +20,10 @@ from datetime import date, timedelta
 
 import requests
 
+from ._cli import default_to_today
+
 DEFAULT_OUTPUT_DIR = "frontpages"
-DEFAULT_START_DATE = date(2025, 1, 1)
-DEFAULT_END_DATE = date(2026, 3, 6)
+SYNTAX = "download-frontpages [START_DATE] [END_DATE]   (dates as YYYY-MM-DD)"
 
 
 def url_for_date(d: date) -> str:
@@ -74,16 +76,35 @@ def _parse_date(s: str) -> date:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Download NYT front page PDFs for a date range.")
-    parser.add_argument("--start", type=_parse_date, default=DEFAULT_START_DATE,
-                        help=f"Start date YYYY-MM-DD (default: {DEFAULT_START_DATE})")
-    parser.add_argument("--end", type=_parse_date, default=DEFAULT_END_DATE,
-                        help=f"End date YYYY-MM-DD (default: {DEFAULT_END_DATE})")
+    parser = argparse.ArgumentParser(
+        description="Download NYT front page PDFs. Downloads a single date unless an "
+                    "end date is given; defaults to today when no date is given.",
+        epilog="Examples:\n"
+               "  download-frontpages                          # today only\n"
+               "  download-frontpages 2025-01-01               # one date only\n"
+               "  download-frontpages 2025-01-01 2025-03-06    # a date range\n",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument("start", nargs="?", type=_parse_date,
+                        help="Start date YYYY-MM-DD (default: today)")
+    parser.add_argument("end", nargs="?", type=_parse_date,
+                        help="End date YYYY-MM-DD. Omit to download only the start date.")
     parser.add_argument("--out-dir", default=DEFAULT_OUTPUT_DIR,
                         help=f"Output directory (default: {DEFAULT_OUTPUT_DIR})")
     args = parser.parse_args()
 
-    download_range(args.start, args.end, args.out_dir)
+    if args.start is None:
+        start = date.fromisoformat(default_to_today(SYNTAX))
+    else:
+        start = args.start
+
+    # A single date unless an explicit end is given.
+    end = args.end if args.end is not None else start
+
+    if end < start:
+        parser.error(f"end date {end} is before start date {start}")
+
+    download_range(start, end, args.out_dir)
 
 
 if __name__ == "__main__":

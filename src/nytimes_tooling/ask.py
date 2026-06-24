@@ -3,6 +3,7 @@ Ask questions about an NYT front page using a local Ollama model.
 Reads from pre-converted markdown files (run pdf-to-markdown first).
 
 Usage:
+    ask-frontpage                              # today
     ask-frontpage 2025-01-01
     ask-frontpage 2025-01-01 --model llama3:latest
 """
@@ -12,9 +13,12 @@ import sys
 
 import requests
 
+from ._cli import default_to_today
+
 OLLAMA_URL = "http://localhost:11434/api/chat"
 DEFAULT_MODEL = "llama3:latest"
 MARKDOWN_DIR = "markdown"
+SYNTAX = "ask-frontpage [DATE] [--model MODEL]   (date as YYYY-MM-DD)"
 
 SYSTEM_PROMPT = (
     "You are a research assistant helping analyze New York Times front pages. "
@@ -60,22 +64,23 @@ def ask_ollama(model, context, question, history):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Ask questions about an NYT front page.")
-    parser.add_argument("date", help="Date in YYYY-MM-DD format (e.g. 2025-01-01)")
+    parser = argparse.ArgumentParser(description="Ask questions about an NYT front page (today if no date given).")
+    parser.add_argument("date", nargs="?", help="Date in YYYY-MM-DD format (default: today)")
     parser.add_argument("--model", default=DEFAULT_MODEL, help=f"Ollama model (default: {DEFAULT_MODEL})")
     args = parser.parse_args()
 
-    md_path = f"{MARKDOWN_DIR}/{args.date}.md"
+    date_str = args.date if args.date else default_to_today(SYNTAX)
+    md_path = f"{MARKDOWN_DIR}/{date_str}.md"
 
     try:
         with open(md_path, "r", encoding="utf-8") as f:
             context = f.read()
     except FileNotFoundError:
-        print(f"Error: {md_path} not found. Run pdf-to-markdown {args.date} first.")
+        print(f"Error: {md_path} not found. Run pdf-to-markdown {date_str} first.")
         sys.exit(1)
 
     print(f"Model  : {args.model}")
-    print(f"Date   : {args.date}")
+    print(f"Date   : {date_str}")
     print(f"Context: {len(context)} chars")
     print("Type your question, or 'quit' to exit.\n")
 

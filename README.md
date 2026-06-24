@@ -41,15 +41,18 @@ ollama pull llama3
 
 ### `download-frontpages`
 
-Downloads front page PDFs for a date range into `frontpages/YYYY-MM-DD.pdf`.
+Downloads front page PDFs into `frontpages/YYYY-MM-DD.pdf`.
 
-- Defaults to Jan 1, 2025 – Mar 6, 2026
+- With **no date**, downloads **today** only
+- With **one date**, downloads **that date** only
+- With **two dates**, downloads the **inclusive range**
 - Skips files already downloaded — safe to resume if interrupted
 - Randomized 2–4s delay between requests; handles 404s gracefully
 
 ```bash
-uv run download-frontpages
-uv run download-frontpages --start 2025-01-01 --end 2025-03-06
+uv run download-frontpages                          # today only
+uv run download-frontpages 2025-01-01               # one date only
+uv run download-frontpages 2025-01-01 2025-03-06    # a date range
 ```
 
 ### `pdf-to-markdown`
@@ -59,19 +62,21 @@ Converts front page PDFs to structured markdown using the PDF's embedded text (n
 The `--filter` flag strips known layout noise (continuation lines, section index refs, weather text, volume/price lines).
 
 ```bash
-uv run pdf-to-markdown 2025-01-01            # single date
-uv run pdf-to-markdown 2025-01-01 --filter   # strip noise
+uv run pdf-to-markdown                       # today
+uv run pdf-to-markdown 2025-01-01 --filter   # one date, strip noise
 uv run pdf-to-markdown --all --filter        # convert all
 uv run pdf-to-markdown --all --filter --force  # force reconvert
 ```
 
-Output is saved to `markdown/YYYY-MM-DD.md`.
+Output is saved to `markdown/YYYY-MM-DD.md`. Converting a single date that hasn't
+been downloaded exits with an error telling you to download it first.
 
 ### `ask-frontpage`
 
 Interactive Q&A about a front page using a local Ollama model. Reads the pre-converted markdown (avoiding OCR hallucinations). The full page is sent on the first question; later questions send only the conversation history to keep context efficient.
 
 ```bash
+uv run ask-frontpage                         # today
 uv run ask-frontpage 2025-06-15
 uv run ask-frontpage 2025-06-15 --model deepseek-coder-v2:16b
 ```
@@ -87,7 +92,9 @@ nytimes-tooling/
 ├── src/nytimes_tooling/
 │   ├── download.py             # Step 1: download PDFs
 │   ├── convert.py              # Step 2: PDF → markdown
-│   └── ask.py                  # Step 3: Q&A via Ollama
+│   ├── ask.py                  # Step 3: Q&A via Ollama
+│   └── _cli.py                 # shared CLI helpers (today default, syntax)
+├── scripts/windows/            # .bat wrappers that forward args to the commands
 ├── frontpages/                 # downloaded PDFs (git-ignored)
 └── markdown/                   # converted markdown (git-ignored)
 ```

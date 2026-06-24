@@ -3,6 +3,7 @@ Convert NYT front page PDFs to markdown using embedded text.
 Detects column layout so articles from different columns don't get mixed.
 
 Usage:
+    pdf-to-markdown                            # today
     pdf-to-markdown 2025-01-01                 # single date
     pdf-to-markdown 2025-01-01 --filter        # strip noise lines
     pdf-to-markdown --all --filter             # convert all, filtered
@@ -17,7 +18,10 @@ from collections import Counter
 
 import fitz  # PyMuPDF
 
+from ._cli import default_to_today
+
 FRONTPAGES_DIR = "frontpages"
+SYNTAX = "pdf-to-markdown [DATE] [--filter] [--force]   (date as YYYY-MM-DD, or --all)"
 MARKDOWN_DIR = "markdown"
 
 # Noise blocks to skip (print metadata, barcodes, etc.)
@@ -242,7 +246,8 @@ def convert_date(date_str, force=False, filtered=False):
     md_path = os.path.join(MARKDOWN_DIR, f"{date_str}.md")
 
     if not os.path.exists(pdf_path):
-        print(f"  {date_str} - PDF not found, skipping")
+        print(f"  {date_str} - PDF not found in {FRONTPAGES_DIR}/. "
+              f"Download it first: download-frontpages {date_str}")
         return False
     if os.path.exists(md_path) and not force:
         print(f"  {date_str} - already converted, skipping")
@@ -264,14 +269,24 @@ def convert_date(date_str, force=False, filtered=False):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Convert NYT front page PDFs to markdown.")
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("date", nargs="?", help="Single date in YYYY-MM-DD format")
-    group.add_argument("--all", action="store_true", help="Convert all PDFs in frontpages/")
+    parser = argparse.ArgumentParser(
+        description="Convert NYT front page PDFs to markdown. Converts a single date "
+                    "(today if none given), or every downloaded PDF with --all.",
+        epilog="Examples:\n"
+               "  pdf-to-markdown                            # today\n"
+               "  pdf-to-markdown 2025-01-01 --filter        # one date, filtered\n"
+               "  pdf-to-markdown --all --filter             # every downloaded PDF\n",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument("date", nargs="?", help="Date in YYYY-MM-DD format (default: today)")
+    parser.add_argument("--all", action="store_true", help="Convert all PDFs in frontpages/")
     parser.add_argument("--force", action="store_true", help="Reconvert even if markdown already exists")
     parser.add_argument("--filter", action="store_true", dest="filtered",
                         help="Strip noise lines (page refs, section headers, continuation lines, etc.)")
     args = parser.parse_args()
+
+    if args.all and args.date:
+        parser.error("give a single date OR --all, not both")
 
     os.makedirs(MARKDOWN_DIR, exist_ok=True)
 
@@ -284,9 +299,9 @@ def main():
         for pdf_file in pdfs:
             convert_date(pdf_file.replace(".pdf", ""), force=args.force, filtered=args.filtered)
     else:
-        if not args.date:
-            parser.error("Provide a date or use --all")
-        convert_date(args.date, force=args.force, filtered=args.filtered)
+        date_str = args.date if args.date else default_to_today(SYNTAX)
+        if not convert_date(date_str, force=args.force, filtered=args.filtered):
+            sys.exit(1)
 
     print("Done.")
 
